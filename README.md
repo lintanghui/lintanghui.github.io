@@ -1,1 +1,1 @@
-# lintanghui.github.io
+# daily record

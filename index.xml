@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Whiteplain</title>
+    <link>https://example.com/</link>
+    <description>Recent content on Whiteplain</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>&amp;copy; Copyright 2017 Your name</copyright>
+    <lastBuildDate>Sat, 29 Mar 2014 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="https://example.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>缓存使用</title>
+      <link>https://example.com/archives/cache/</link>
+      <pubDate>Sat, 29 Mar 2014 00:00:00 +0000</pubDate>
+      
+      <guid>https://example.com/archives/cache/</guid>
+      <description>缓存使用总结 缓存类型  进程内缓存 memcache redis http缓存
+通过设置http header头部字段,if-match etag，if-modify-since，expires等字段进行相关设置。 ngnix缓存
+通过配置expires,proxy_cache进行缓存，主要用于缓存静态文件。 多级缓存 本地磁盘缓存  区别对比
+   缓存类型 使用场景 使用示例 优点 缺点     进程内缓存 少量数据，对应用程序只读或读多写少 后台配置，分区信息 无需网络开销，访问速度最快 集群机器数据不同步   memcache 海量数据，高并发读写 评论内容，账号信息 内存占用相对redis少，适合大键存储 数据结构单一,不支持备份及持久化，只支持客户端操作   redis 海量数据，高并发读写 评论id索引，收藏视频信息 数据结构丰富，支持备份及持久化，支持服务器操作 相对memcache内存效率低     localcache适用于存储少量数据及对应用程序只读或读多写少的场景，例如后台黑白名单、推广信息等，因为应用程序对这些数据几乎只是只读的，数据的修改主要发生在后台管理员更新配置时，且这些数据量很少，完全可以存储在本地内存当中。应用程序只需要定期从数据库load数据进行更新即可。对于分布式集群的部署，每台机器独自维护一份localcache，单后台数据有变动时，不同机器不可能同时load更新，因此存在集群机器数据不一致的情况。 但是这种情况通常是在可接受范围内的。
+ memcache适用于存储大量高并发读写的数据，减轻数据库访问压力。如果没有memcache缓存，所有的访问直接打到db，高并发情况下将立马把数据库打挂,由于是直接存储在内存当中，因此访问速度将大大降低，同时数据缓存在memcache集群当中，可以确保应用集群访问数据的一致性，而不会存在localcache当中的问题。由于memcache不支持持久化，一旦集群机器出现宕机，将导致所有数据丢失，但是memcache本身就不是为了持久化数据而存在的，所以这也不是一个问题，需要注意的是，一旦memcache出现宕机等情况需要服务重启时，需要对缓存进行预热，不然大量miss同样也会打挂数据库。
+ redis同样也是为了应对高并发读写而存在的。和memcache一样也是k-v类型，但是redis支持更丰富的数据结构，list,set,sortset,hashes。由于redis数据不是完全存在内存当中，当redis内存耗尽时，长期不使用的value将被转移到磁盘，因此redis可以存储比自身内存大的数据。同时redis支持持久化及master-slave模式数据备份。重启时可以再次加载磁盘的数据到内存当中。redis还具有容灾模式，只需要开启aof，即使服务器宕机也可以通过aof文件进行数据恢复。是否使用持久化及开启aof要根据具体业务场景进行选择。
+  缓存更新逻辑 缓存更新模式  cache aside：读写缓存，miss则读数据库，有业务代码维护缓存，回源则读书数据源然后加入缓存。 read/write through : 由缓存层代理，业务只读写缓存。miss由缓存自动回源而不是业务代码处理回源。写的时候不存在写数据库，存在则更新缓存并由缓存回写db。 wirte-behind : 只更新缓存，有缓存异步定期会写db，类似于文件系统的page cache。实现了write back批量写 。 binlog 异步更新: 订阅数据库binglog，由binlog来更新缓存内容。</description>
+    </item>
+    
+  </channel>
+</rss>

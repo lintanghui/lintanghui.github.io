@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>缓存使用 - Whiteplain</title>
+  <meta property="og:title" content="缓存使用 - Whiteplain" />
+  <meta name="twitter:title" content="缓存使用 - Whiteplain" />
+  <meta name="description" content="缓存使用">
+  <meta property="og:description" content="缓存使用">
+  <meta name="twitter:description" content="缓存使用">
+  <meta name="author" content="Your name"/>
+  <meta property="og:site_name" content="Whiteplain" />
+  <meta property="og:url" content="https://example.com/archives/cache/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.44" />
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+  <script defer src="https://use.fontawesome.com/releases/v5.0.10/js/all.js" integrity="sha384-slN8GvtUJGnv6ca26v8EzVaR9DC58QEwsIk9q1QXdCU8Yu8ck/tL/5szYlBbqmS+" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">Whiteplain</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-categories"><a href="/categories/" title="Categories">Categories</a></li>
+      <li class="site-navi-item-tags"><a href="/tags/" title="Tags">Tags</a></li>
+      <li class="site-navi-item-archives"><a href="/archives/" title="Archives">Archives</a></li>
+      <li class="site-navi-item-about"><a href="/about/" title="About">About</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">缓存使用</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>March 29, 2014</time></li>
+        <li class="article-meta-categories">
+          <a href="/categories/cache/">
+            <i class="fas fa-folder"></i>
+            cache
+          </a>&nbsp;
+        </li>
+        <li class="article-meta-tags">
+          <a href="/tags/redis/">
+            <i class="fas fa-tag"></i>
+            redis
+          </a>&nbsp;
+        </li>
+        <li class="article-meta-tags">
+          <a href="/tags/memcache/">
+            <i class="fas fa-tag"></i>
+            memcache
+          </a>&nbsp;
+        </li>
+      </ul>
+      
+      
+
+<h1 id="缓存使用总结">缓存使用总结</h1>
+
+<h2 id="缓存类型">缓存类型</h2>
+
+<ol>
+<li>进程内缓存</li>
+<li>memcache</li>
+<li>redis</li>
+<li>http缓存<br />
+通过设置http header头部字段,if-match etag，if-modify-since，expires等字段进行相关设置。</li>
+<li>ngnix缓存<br />
+通过配置expires,proxy_cache进行缓存，主要用于缓存静态文件。</li>
+<li>多级缓存</li>
+<li>本地磁盘缓存</li>
+</ol>
+
+<p><em>区别对比</em></p>
+
+<table>
+<thead>
+<tr>
+<th>缓存类型</th>
+<th align="right">使用场景</th>
+<th align="center">使用示例</th>
+<th align="center">优点</th>
+<th align="center">缺点</th>
+</tr>
+</thead>
+
+<tbody>
+<tr>
+<td>进程内缓存</td>
+<td align="right">少量数据，对应用程序只读或读多写少</td>
+<td align="center">后台配置，分区信息</td>
+<td align="center">无需网络开销，访问速度最快</td>
+<td align="center">集群机器数据不同步</td>
+</tr>
+
+<tr>
+<td>memcache</td>
+<td align="right">海量数据，高并发读写</td>
+<td align="center">评论内容，账号信息</td>
+<td align="center">内存占用相对redis少，适合大键存储</td>
+<td align="center">数据结构单一,不支持备份及持久化，只支持客户端操作</td>
+</tr>
+
+<tr>
+<td>redis</td>
+<td align="right">海量数据，高并发读写</td>
+<td align="center">评论id索引，收藏视频信息</td>
+<td align="center">数据结构丰富，支持备份及持久化，支持服务器操作</td>
+<td align="center">相对memcache内存效率低</td>
+</tr>
+</tbody>
+</table>
+
+<ul>
+<li><p>localcache适用于存储少量数据及对应用程序只读或读多写少的场景，例如后台黑白名单、推广信息等，因为应用程序对这些数据几乎只是只读的，数据的修改主要发生在后台管理员更新配置时，且这些数据量很少，完全可以存储在本地内存当中。应用程序只需要定期从数据库load数据进行更新即可。对于分布式集群的部署，每台机器独自维护一份localcache，单后台数据有变动时，不同机器不可能同时load更新，因此存在集群机器数据不一致的情况。
+但是这种情况通常是在可接受范围内的。</p></li>
+
+<li><p>memcache适用于存储大量高并发读写的数据，减轻数据库访问压力。如果没有memcache缓存，所有的访问直接打到db，高并发情况下将立马把数据库打挂,由于是直接存储在内存当中，因此访问速度将大大降低，同时数据缓存在memcache集群当中，可以确保应用集群访问数据的一致性，而不会存在localcache当中的问题。由于memcache不支持持久化，一旦集群机器出现宕机，将导致所有数据丢失，但是memcache本身就不是为了持久化数据而存在的，所以这也不是一个问题，需要注意的是，一旦memcache出现宕机等情况需要服务重启时，<strong>需要对缓存进行预热</strong>，不然大量miss同样也会打挂数据库。</p></li>
+
+<li><p>redis同样也是为了应对高并发读写而存在的。和memcache一样也是k-v类型，但是redis支持更丰富的数据结构，list,set,sortset,hashes。由于redis数据不是完全存在内存当中，当redis内存耗尽时，长期不使用的value将被转移到磁盘，因此redis可以存储比自身内存大的数据。同时redis支持持久化及master-slave模式数据备份。重启时可以再次加载磁盘的数据到内存当中。redis还具有容灾模式，只需要开启aof，即使服务器宕机也可以通过aof文件进行数据恢复。<strong>是否使用持久化及开启aof要根据具体业务场景进行选择。</strong></p></li>
+</ul>
+
+<h2 id="缓存更新逻辑">缓存更新逻辑</h2>
+
+<h3 id="缓存更新模式">缓存更新模式</h3>
+
+<ol>
+<li>cache aside：读写缓存，miss则读数据库，有业务代码维护缓存，回源则读书数据源然后加入缓存。</li>
+<li>read/write through : 由缓存层代理，业务只读写缓存。miss由缓存自动回源而不是业务代码处理回源。写的时候不存在写数据库，存在则更新缓存并由缓存回写db。</li>
+<li>wirte-behind : 只更新缓存，有缓存异步定期会写db，类似于文件系统的page cache。实现了write back批量写 。</li>
+
+<li><p>binlog 异步更新: 订阅数据库binglog，由binlog来更新缓存内容。</p>
+
+<h3 id="cache-then-db-or-db-then-cache">cache then db or db then cache ？</h3></li>
+</ol>
+
+<ul>
+<li><p>对于cache和db的操作顺序，网上一直存在不同的观点，到底是先更新数据库再淘汰缓存，还是先淘汰缓存再更新数据库呢。我们的做法是先<strong>更新数据库在淘汰缓存</strong>。</p></li>
+
+<li><p>首先先分析一下两者可能导致的最差情况(不考虑db和cache其中一个操作失败的情况)。</p></li>
+</ul>
+
+<ol>
+<li><p>先淘汰缓存在更新数据库。对于这种做法，如果淘汰了缓存，此时刚好来了一个请求，由于缓存已经被淘汰，新来的请求将从数据库读取信息重新load到缓存，如果先前的写操作还没完成，读操作读到的将是旧的数据，此时重新load到缓存的数据将是脏数据并且后续的请求将都读到脏数据。</p></li>
+
+<li><p>先更新数据库在淘汰缓存。更新db的时候刚好有请求到达，此时请求读到的将是脏数据。db更新后将淘汰旧的缓存，后续的请求读到的将是新的数据。</p></li>
+</ol>
+
+<ul>
+<li>在不考虑cache和db操作失败的情况下，显然先更新db再更新cache更合适。那如果考虑其中一个更新失败了呢？</li>
+</ul>
+
+<ol>
+<li>先更新(淘汰)cache，后续db操作失败。如果是更新缓存，db操作失败将导致缓存中的数据是脏数据。如果是淘汰缓存，db更新失败会导致一次cache miss。</li>
+<li>先更新了db，后续cache操作失败，此时将会导致cache中的数据是脏数据。</li>
+</ol>
+
+<p><strong>在考虑了更新失败的情况下，分布式服务中并没有完美的解决方案，方法需要自己根据业务进行权衡,除非你愿意牺牲性能使用事务强一致性</strong></p>
+
+<h3 id="update-cache-or-delete-cache">update cache or delete cache ?</h3>
+
+<ul>
+<li><p>写操作发生时，是更新缓存还是删除缓存呢。facebook在 <a href="https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf">Scaling Memcache at Facebook</a>中使用的策略是<strong>更新数据库后删除memcache缓存</strong>。为什么是删除缓存而不是更新缓存呢？假设并发写更新完数据库后同时去更新缓存。此时两个写操作可能都从缓存中取到了数据A，此时将导致并发写导致脏数据。</p></li>
+
+<li><p>并发写操作导致脏数据的情况是因为必须先从memcache中取出数据修改完在写回。但是在redis中，由于redis支持服务器操作，INCE,HINCR等操作都可以直接在服务器当中操作完成，对于这类操作不存在并发写的问题，因此可以选择<strong>更新db后更新缓存</strong>。直接update将减少一次cache miss。</p></li>
+
+<li><p>在我们的大多数业务场景中，我们使用的是<strong>更新db后更新缓存</strong>。虽然更新缓存可能导致并发写脏数据。但是由于我们使用了kafka消息队列，并发写操作经过kafka后是可以转化为顺序写的。比如对于评论。同一个视频下面可能有多条并发写评论，视频收到评论后需要更新视频的评论数信息，如果直接更新缓存有很大的几率导致并发写脏数据，但是我们使用<strong>视频aid作为key</strong>，通过kafka消息队列异步处理，这样对于同一个视频的写操作都会发送到同一个kafka分区，同时对于consumer来说，同一个视频的写操作都会由同一个consumer消费，通过消息队列异步化处理，即可把并发写转化为顺序写，此时更新缓存就不会存在写竞争。</p></li>
+
+<li><p>到底delete还是update，还是得自己根据业务场景进行权衡。</p></li>
+</ul>
+
+<h2 id="缓存过期策略">缓存过期策略</h2>
+
+<ol>
+<li>定时过期：设置定时器，定时器到触发过期。实现简单，但是cpu开销高。</li>
+<li>惰性过期：访问的时候检查，对cpu友好，对内存不友好。</li>
+<li>定期过期：定期扫描，淘汰过期的数据。综合上两种，但是需要合理设置执行频率和时长。</li>
+</ol>
+
+<ul>
+<li>redis缓存过期实现<br />
+redis同时使用定期过期和惰性过期
+惰性过期实现在db.c/expireifneed
+<code>
+int expireIfNeeded(redisDb *db, robj *key) {
+mstime_t when = getExpire(db,key);
+mstime_t now;
+if (when &lt; 0) return 0; /* No expire for this key */
+if (server.loading) return 0;
+now = server.lua_caller ? server.lua_time_start : mstime();
+if (server.masterhost != NULL) return now &gt; when;
+if (now &lt;= when) return 0;
+server.stat_expiredkeys++;
+propagateExpire(db,key,server.lazyfree_lazy_expire);
+notifyKeyspaceEvent(NOTIFY_EXPIRED,
+    &quot;expired&quot;,key,db-&gt;id);
+return server.lazyfree_lazy_expire ? dbAsyncDelete(db,key) :
+                                     dbSyncDelete(db,key);
+}
+</code>
+定期删除实现在expire.c/activeExpireCycle()</li>
+</ul>
+
+<h2 id="回收策略">回收策略</h2>
+
+<ol>
+<li>FIFO先进先出</li>
+<li>LRU 最近最久未使用</li>
+<li>LFU 最近最少使用</li>
+</ol>
+
+<p>通常实现采用了LRU</p>
+
+<h2 id="缓存常见问题">缓存常见问题</h2>
+
+<h3 id="缓存穿透">缓存穿透</h3>
+
+<ul>
+<li><p>缓存穿透指的是访问一个不存在的数据一定会发生miss穿透到数据库，但是从db中查询也查找不到数据不写入缓存，导致下一次查询还是会继续cache miss。解决方法是从db中查询不到数据时，在缓存中设置一个空对象或者不存在的标志。这个方法可以解决穿透的问题，但是代价就是牺牲加大的缓存在保存空对象数据。</p></li>
+
+<li><p>在评论系统中，用户获取评论列表的时候需要查询用户对这些评论是否点赞。但是点赞是相对冷门的操作，对于绝大多数用户根本不存在点赞相关数据，因此每次用户访问都会导致请求穿透到DB，针对这种情况，我们进行了标志存储。原先是采用set来保存用户点赞过的评论的id，当不存在点赞信息时，我们就初始化一个set，并在set中设置唯一member-1.这样通过牺牲少量的内存就可解决穿透问题。对于置顶评论也是同样的问题。</p></li>
+</ul>
+
+<h3 id="雪崩问题">雪崩问题</h3>
+
+<ul>
+<li>雪崩问题指的是缓存服务挂掉了导致所有请求全部到达db，瞬间打挂服务。</li>
+<li>针对雪崩问题，解决方法就是部署高可用集群，对服务进行降级及限流。</li>
+</ul>
+
+<h3 id="热点数据过期">热点数据过期</h3>
+
+<ul>
+<li>当热点数据过期是，可能所有的请求会同时cache miss然后同时去请求数据库导致数据库压力骤增</li>
+<li>可以使用分布式锁来解决，当第一个请求miss获取锁后，其他请求全部阻塞知道第一个请求重新从db load数据后才解除，可以防止大量请求直接穿透到db。</li>
+</ul>
+
+<h2 id="redis使用">redis使用</h2>
+
+<ul>
+<li>业务中，redis的使用占绝大部分，且相对于memcache，由于丰富的数据结构，redis的使用也相对比较复杂。因此着重讲讲redis使用的一些注意事项</li>
+</ul>
+
+<h3 id="redis数据类型选择">redis数据类型选择</h3>
+
+<h4 id="use-hashes-when-possible">Use hashes when possible</h4>
+
+<ul>
+<li>redis的内存效率是比较低的，尤其是使用k-v的时候，在<a href="http://redis.io/topics/memory-optimization这这篇博客中明确说明。能使用hashes的地方尽量使用hashes，在使用k-v结构的时候，每一个value都是一个redisObject,当使用hashes的时候，redis使用的压缩列表和字典两种存储方式，使用压缩列表的时候，由于压缩列表内存的优化，将大大节省内存空间。">http://redis.io/topics/memory-optimization这这篇博客中明确说明。能使用hashes的地方尽量使用hashes，在使用k-v结构的时候，每一个value都是一个redisObject,当使用hashes的时候，redis使用的压缩列表和字典两种存储方式，使用压缩列表的时候，由于压缩列表内存的优化，将大大节省内存空间。</a>
+<code>redisObject
+typedef struct redisObject {
+unsigned type:4;
+unsigned encoding:4;
+unsigned lru:LRU_BITS; 
+int refcount;
+void *ptr;
+} robj;
+</code></li>
+<li>例如视频下评论信息，可以使用 aid-rpid =》 replyinfo，即aid-rpid作为key，replyinfo作为value，也可以使用aid =》rpid-replyifo，即aid作为key，value是hashes，hashes的key是rpid，value是replyinfo。经过测试，在同样100W个key的情况下使用后一种方法可以比第一种节约大量的内存。同时，第二种方法还可以通过HGET aid 获取指定评论，也可以HGETALL aid获取所有评论。第一种则只能先 KEYS aid*获取rpid在去查询info。</li>
+</ul>
+
+<h4 id="sortset">sortset</h4>
+
+<ul>
+<li>sortset的实现采用了跳表和字典两种数据结构，跳表保证rank及范围查询时O(logN)的复杂度，字典则使得score查询时能达到O(1)的时间复杂度.
+使用sortset时需要注意的一点是sortset的大小，由于sortset是插入排序，如果sortset里数据量太大，可能导致插入排序速度太慢。</li>
+</ul>
+
+<h4 id="set">set</h4>
+
+<ul>
+<li>set底层使用的其实是dict，其实就是一个value为null的hashes。需要注意的是，在某些场景下，可以使用二进制数组来替代set节省内存空间，通过GETBIT,SETBIT设置member判断member是否存在。</li>
+</ul>
+
+<h4 id="redis底层图解">redis底层图解</h4>
+
+<ul>
+<li>下图大致概括了redis常用的数据类型的底层实现。
+<img src="http://7xr93v.com1.z0.glb.clouddn.com/redis.jpg" alt="redis底层实现" /></li>
+</ul>
+
+<h3 id="redis-expire">redis expire</h3>
+
+<ul>
+<li><p>不同于memcache必须在set key的时候指定expire time,redis可以在set的时候指定expiretime，也可以在使用途中在设置expiretime。</p></li>
+
+<li><p>那么何时设置expire呢，是在set数据前之前还是set数据之后呢。在业务中曾经犯过这样一个错误。用户查询收藏夹信息的时候会先查询缓存，如果缓存miss则从db中加载。收藏夹信息在redis中是以sortset方式存储的。score表示收藏时间。当用户添加收藏的时候，就把新的数据ZADD进去，然后expire 增加过期时间。粗看是没什么问题，但是这个时候忽略了一个问题，<strong>就是zadd前缓存过期了，下次查询的时候由于zadd数据存在将不会miss导致读到的只是最新zadd的数据！</strong></p></li>
+
+<li><p>因此在<strong>执行类似zadd sadd hset等操作的时候，一定要先进行expire，如果miss则不执行，等到查询miss的时候在从db中load</strong> 。</p></li>
+</ul>
+
+<h3 id="hashes-拆分">hashes 拆分</h3>
+
+<ul>
+<li>是否有必要对hashes进行拆分？答案是肯定的。原因如下</li>
+<li>减小hashes粒度，增加查询效率。</li>
+<li>分散存储空间，redis当中，hashes的k-v只会保存在一个节点，如果所有的数据全部存在一个hashes，将导致节点数据不均衡。相反，把hashes进行拆分，每个hashes保存的只是部分数据，不同的hashes也会被分配到集群的不同节点。均衡集群的内存负载。</li>
+</ul>
+
+<h2 id="相关链接">相关链接</h2>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/2873249/is-memcached-a-dinosaur-in-comparison-to-redis">Is memcached a dinosaur in comparison to Redis</a></li>
+<li><a href="https://www.quora.com/Why-does-Facebook-use-delete-to-remove-the-key-value-pair-in-Memcached-instead-of-updating-the-Memcached-during-write-request-to-the-backend">Why does Facebook use delete to remove the key-value pair in Memcached instead of updating the Memcached during write request to the backend?</a></li>
+<li><a href="http://coolshell.cn/articles/17416.html#more-17416">缓存更新的套路</a></li>
+<li><a href="https://www.usenix.org/system/files/conference/nsdi13/nsdi13-final170_update.pdf">Scaling Memcache at Facebook</a></li>
+</ul>
+
+    </article>
+
+    
+<ul class="article-share">
+  <li>
+    <a href="https://twitter.com/share" class="twitter-share-button">Tweet</a> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+  </li>
+  <li>
+    <div class="fb-share-button" data-href="https://example.com/archives/cache/" data-layout="button_count" data-action="like" data-size="small" data-show-faces="true" data-share="true"></div>
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/ja_JP/sdk.js#xfbml=1&version=v2.10";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+  </li>
+  <li>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <g:plus action="share"></g:plus>
+  </li>
+  <li>
+    <a href="http://b.hatena.ne.jp/entry/" class="hatena-bookmark-button" data-hatena-bookmark-layout="basic-label-counter" data-hatena-bookmark-lang="en" title="このエントリーをはてなブックマークに追加"><img src="https://b.st-hatena.com/images/entry-button/button-only@2x.png" alt="このエントリーをはてなブックマークに追加" width="20" height="20" style="border: none;" /></a><script src="https://b.st-hatena.com/js/bookmark_button.js" charset="utf-8" async="async"></script>
+  </li>
+  <li>
+    <a data-pocket-label="pocket" data-pocket-count="horizontal" class="pocket-btn" data-lang="en"></a>
+    <script>!function(d,i){if(!d.getElementById(i)){var j=d.createElement("script");j.id=i;j.src="https://widgets.getpocket.com/v1/j/btn.js?v=1";var w=d.getElementById(i);d.body.appendChild(j);}}(document,"pocket-btn-js");</script>
+  </li>
+</ul>
+    <div class="disqus-comments">
+      <div id="disqus_thread"></div>
+<script>
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "Shortname" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+    </div>
+
+    <ul class="pager article-pager">
+      <li class="pager-newer pager-noitem">&lt; Newer</li>
+      <li class="pager-older pager-noitem">Older &gt;</li>
+    </ul>
+  </div>
+
+
+<div class="site-footer">
+  <div class="copyright">&copy; Copyright 2017 Your name</div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-about"><a href="/about/" title="About">About</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+<script src="/js/script.js"></script>
+<script src="/js/custom.js"></script>
+
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'Toracking ID', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+</body>
+</html>
