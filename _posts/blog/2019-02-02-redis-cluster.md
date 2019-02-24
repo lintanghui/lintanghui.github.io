@@ -276,4 +276,4 @@ int clusterNodeDelFailureReport(clusterNode *node, clusterNode *sender)
 ```
 
 cluster会根据收到的gossip包里的msgdata来更新集群的状态信息，包括epoch，以及其余节点的状态。
-如果node被标记为pfail或fail，则被加入fail_reports，当fail_reports
+如果node被标记为pfail或fail，则被加入fail_reports，当fail_reports超过 半数节点是，则当前节点被标记为node_fail.
